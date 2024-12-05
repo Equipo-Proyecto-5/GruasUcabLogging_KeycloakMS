@@ -6,4 +6,13 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+	<ItemGroup>
+		<PackageReference Include="MediatR" Version="11.0.0" />
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	    <ProjectReference Include="..\LogginMS.Service\LogginMS.Service.csproj" />
+	</ItemGroup>
+
 </Project>

@@ -1,32 +1,29 @@
-# Consulte https://aka.ms/customizecontainer para aprender a personalizar su contenedor de depuración y cómo Visual Studio usa este Dockerfile para compilar sus imágenes para una depuración más rápida.
-
-# Dependiendo del sistema operativo de las máquinas host que vayan a compilar o ejecutar los contenedores, puede que sea necesario cambiar la imagen especificada en la instrucción FROM.
-# Para más información, consulte https://aka.ms/containercompat
-
-# Esta fase se usa cuando se ejecuta desde VS en modo rápido (valor predeterminado para la configuración de depuración)
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-nanoserver-1809 AS base
-WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
-
-
-# Esta fase se usa para compilar el proyecto de servicio
-FROM mcr.microsoft.com/dotnet/sdk:8.0-nanoserver-1809 AS build
-ARG BUILD_CONFIGURATION=Release
+# Usa una imagen base de .NET 8 SDK para construir la aplicación
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY ["GruasUcabLoggingMS_Keycloak/GruasUcabLoggingMS_Keycloak.csproj", "GruasUcabLoggingMS_Keycloak/"]
-RUN dotnet restore "./GruasUcabLoggingMS_Keycloak/GruasUcabLoggingMS_Keycloak.csproj"
-COPY . .
+
+# Copiar el archivo de proyecto y restaurar dependencias
+COPY GruasUcabLoggingMS_Keycloak/GruasUcabLoggingMS_Keycloak.csproj ./GruasUcabLoggingMS_Keycloak/
+COPY LogginMS.Application/LogginMS.Application.csproj ./LogginMS.Application/
+COPY LogginMS.Service/LogginMS.Service.csproj ./LogginMS.Service/
+RUN dotnet restore ./GruasUcabLoggingMS_Keycloak/GruasUcabLoggingMS_Keycloak.csproj
+
+# Copia el resto de los archivos y construye la aplicación
+COPY GruasUcabLoggingMS_Keycloak/. ./GruasUcabLoggingMS_Keycloak/
+COPY LogginMS.Application/. ./LogginMS.Application/
+COPY LogginMS.Service/. ./LogginMS.Service/
 WORKDIR "/src/GruasUcabLoggingMS_Keycloak"
-RUN dotnet build "./GruasUcabLoggingMS_Keycloak.csproj" -c %BUILD_CONFIGURATION% -o /app/build
+RUN dotnet publish -c Release -o /app/out
 
-# Esta fase se usa para publicar el proyecto de servicio que se copiará en la fase final.
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./GruasUcabLoggingMS_Keycloak.csproj" -c %BUILD_CONFIGURATION% -o /app/publish /p:UseAppHost=false
-
-# Esta fase se usa en producción o cuando se ejecuta desde VS en modo normal (valor predeterminado cuando no se usa la configuración de depuración)
-FROM base AS final
+# Usa una imagen base de .NET 8 Runtime para ejecutar la aplicación
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=build /app/out .
+
+# Exponer los puertos para la aplicación
+EXPOSE 7133
+EXPOSE 5230
+
+# Comando para ejecutar la aplicación
 ENTRYPOINT ["dotnet", "GruasUcabLoggingMS_Keycloak.dll"]
+

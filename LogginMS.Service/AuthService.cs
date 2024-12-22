@@ -1,4 +1,4 @@
-﻿using LogginMS.Service.Interfaces;
+using LogginMS.Service.Interfaces;
 using System.Net.Http.Headers;
 using System.Net.Http;
 using System.Text;

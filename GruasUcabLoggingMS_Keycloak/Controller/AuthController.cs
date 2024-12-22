@@ -1,4 +1,4 @@
-﻿using LogginMS.Application.Commands;
+using LogginMS.Application.Commands;
 using LogginMS.Application.Dtos;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -33,6 +33,7 @@ namespace GruasUcabLoggingMS_Keycloak.Controller
         }
 
 
+
         [HttpPost("password-reset")]
         public async Task<IActionResult> PasswordReset([FromBody] UserDtoPasswordReset request)
         {
@@ -41,4 +42,6 @@ namespace GruasUcabLoggingMS_Keycloak.Controller
         }
     }
 }
+
+
 

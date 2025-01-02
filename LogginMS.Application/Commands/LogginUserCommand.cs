@@ -3,7 +3,7 @@ using MediatR;
 
 namespace LogginMS.Application.Commands
 {
-    public class LoginCommand : IRequest<string>
+    public class LoginCommand : IRequest<SuccessLogin>
     {
         public UserDto User { get; set; }
 

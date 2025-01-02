@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace LogginMS.Application.Dtos
 {
-    public class UserDtoPasswordReset
+    public class SuccessLogin
     {
-        public required string UserName { get; set; }
+        public string username {  get; set; }
+        public string role { get; set; }
     }
 }

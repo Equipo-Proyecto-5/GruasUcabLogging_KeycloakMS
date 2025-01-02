@@ -8,11 +8,11 @@ using MediatR;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.ListenAnyIP(5230); // Puerto HTTP
-    options.ListenAnyIP(7133); // Puerto HTTPS
-});
+//builder.WebHost.ConfigureKestrel(options =>
+//{
+  //  options.ListenAnyIP(5230); // Puerto HTTP
+   // options.ListenAnyIP(7133); // Puerto HTTPS
+//});
 
 // Configuración de autenticación con JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -73,6 +73,15 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin", policy =>
+    {
+        policy.WithOrigins() // Solo permite solicitudes desde este origen
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
 
 var app = builder.Build();
 
@@ -90,6 +99,8 @@ if (app.Environment.IsDevelopment())
 }
 
 // Configuración de la autenticación y autorización
+app.UseCors("AllowSpecificOrigin");
+
 app.UseAuthentication();
 app.UseAuthorization();
 

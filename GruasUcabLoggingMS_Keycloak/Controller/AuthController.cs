@@ -1,6 +1,7 @@
 using LogginMS.Application.Commands;
 using LogginMS.Application.Dtos;
 using MediatR;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GruasUcabLoggingMS_Keycloak.Controller
@@ -30,15 +31,42 @@ namespace GruasUcabLoggingMS_Keycloak.Controller
             {
                 return Unauthorized();
             }
+            catch (InvalidOperationException)
+            {
+                return Forbid();
+            }
+            catch (Exception ex) {
+                return StatusCode(500, "Error al procesar la solicitud");
+            }
         }
 
 
 
         [HttpPost("password-reset")]
-        public async Task<IActionResult> PasswordReset([FromBody] UserDtoPasswordReset request)
+        public async Task<IActionResult> PasswordReset([FromBody] string userName)
         {
-            var result = await _mediator.Send(new PasswordResetCommand(request.UserName));
-            return Ok(new { Message = result });
+            try
+            {
+                var result = await _mediator.Send(new PasswordResetCommand(userName));
+                return Ok(new { Message = result });
+            }
+            catch (Exception ex) 
+            {
+                return StatusCode(500, "Error al procesar la solicitud");
+            }
+        }
+
+        [HttpPut("{userName}")]
+        public async Task<IActionResult> UpdatePassword(string userName,[FromBody] string password)
+        {
+            try
+            {
+                var result = await _mediator.Send(new UpdatePasswordCommand(password, userName));
+                return Ok();
+            }
+            catch (Exception) {
+                return StatusCode(500, "Error al procesar la solicitud");
+            }
         }
     }
 }

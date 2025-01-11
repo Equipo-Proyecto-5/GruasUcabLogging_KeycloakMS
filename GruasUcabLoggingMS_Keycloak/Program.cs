@@ -42,6 +42,8 @@ builder.Services.AddMediatR(typeof(LoginCommand).Assembly);
 
 // Registro de servicios
 builder.Services.AddTransient<IAuthService, AuthService>();
+builder.Services.AddSingleton<IKeycloakClientSecret,KeycloakClientSecret>();
+
 
 // Agrega servicios de Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -77,7 +79,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin", policy =>
     {
-        policy.WithOrigins() // Solo permite solicitudes desde este origen
+        policy.WithOrigins("http://localhost:5173") // Solo permite solicitudes desde este origen
               .AllowAnyMethod()
               .AllowAnyHeader();
     });

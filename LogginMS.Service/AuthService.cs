@@ -13,17 +13,20 @@ namespace LogginMS.Service
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _config;
         private readonly HttpClient _httpClient;
+        private readonly IKeycloakClientSecret _keycloakClientSecret;
 
-        public AuthService(IHttpClientFactory httpClientFactory, IConfiguration config)
+        public AuthService(IHttpClientFactory httpClientFactory, IConfiguration config,IKeycloakClientSecret keycloakClientSecret)
         {
             _httpClientFactory = httpClientFactory;
             _config = config;
             _httpClient = _httpClientFactory.CreateClient();
+            _keycloakClientSecret = keycloakClientSecret;
         }
 
 
         public async Task<string> AuthenticateAsync(string username, string password)
         {
+           
             var client = _httpClientFactory.CreateClient();
             var content = new FormUrlEncodedContent(new[]
             {
@@ -50,7 +53,7 @@ namespace LogginMS.Service
             var responseContent = await response.Content.ReadAsStringAsync();
             var tokenResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
             return tokenResponse.GetProperty("access_token").GetString();
-            return await response.Content.ReadAsStringAsync();
+          //  return await response.Content.ReadAsStringAsync();
         }
 
         public async Task<string> RequestPasswordResetAsync(string username)
@@ -60,11 +63,11 @@ namespace LogginMS.Service
             // Obtener el token de acceso
             var tokenContent = new FormUrlEncodedContent(new[]
             {
-        new KeyValuePair<string, string>("client_id", "admin-cli"),
-        new KeyValuePair<string, string>("grant_type", "password"),
-        new KeyValuePair<string, string>("username", "admin"),
-        new KeyValuePair<string, string>("password", "admin"),
-    });
+             new KeyValuePair<string, string>("client_id", "admin-cli"),
+             new KeyValuePair<string, string>("grant_type", "password"),
+             new KeyValuePair<string, string>("username", "admin"),
+             new KeyValuePair<string, string>("password", "admin"),
+            });
 
             var tokenResponse = await client.PostAsync("http://localhost:8080/realms/master/protocol/openid-connect/token", tokenContent);
             if (!tokenResponse.IsSuccessStatusCode)
@@ -108,12 +111,13 @@ namespace LogginMS.Service
         }
         public async Task<string> GetAdminAccessTokenAsync()
         {
+            var secreto = await _keycloakClientSecret.GetClientSecretAsync();
             var client = _httpClientFactory.CreateClient();
             var tokenEndpoint = $"{_config["Keycloak:BaseUrl"]}/realms/{_config["Keycloak:Realm"]}/protocol/openid-connect/token";
             var content = new FormUrlEncodedContent(new[]
             {
                 new KeyValuePair<string, string>("client_id",_config["Keycloak:ClientId"]),
-                new KeyValuePair<string, string>("client_secret",_config["Keycloak:ClientSecret"]),
+                new KeyValuePair<string, string>("client_secret",secreto),
                 new KeyValuePair<string, string>("grant_type", "client_credentials")
 
             });

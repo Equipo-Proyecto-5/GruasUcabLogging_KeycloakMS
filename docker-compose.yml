@@ -25,7 +25,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:5230;https://+:7133
-      - Keycloak__BaseUrl=http://ec2-3-131-119-201.us-east-2.compute.amazonaws.com:8080
+      - Keycloak__BaseUrl=http://ec2-13-58-197-66.us-east-2.compute.amazonaws.com:8080
     networks:
       - mynetwork
 

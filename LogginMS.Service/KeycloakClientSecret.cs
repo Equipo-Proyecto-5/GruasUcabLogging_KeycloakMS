@@ -32,7 +32,7 @@ namespace LogginMS.Service
                  new KeyValuePair<string, string>("password", "admin"),
                 });
 
-                var tokenResponse = await client.PostAsync("http://localhost:8080/realms/master/protocol/openid-connect/token", tokenContent);
+                var tokenResponse = await client.PostAsync("http://keycloak:8080/realms/master/protocol/openid-connect/token", tokenContent);
                 if (!tokenResponse.IsSuccessStatusCode)
                 {
                     throw new UnauthorizedAccessException("No se pudo obtener el token de acceso.");
@@ -41,7 +41,7 @@ namespace LogginMS.Service
                 var token = JsonDocument.Parse(tokenResult).RootElement.GetProperty("access_token").GetString();
                 //Obtener el la secret key del cliente 
 
-                var getclientEndpoint = " http://localhost:8080/admin/realms/Gruas_UCAB_1/clients";
+                var getclientEndpoint = " http://keycloak:8080/admin/realms/Gruas_UCAB_1/clients";
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
                 var clientResponse = await client.GetAsync(getclientEndpoint);
 

@@ -36,7 +36,8 @@ namespace LogginMS.Service
                 new KeyValuePair<string, string>("grant_type", "password"),
             });
 
-            var response = await client.PostAsync("http://localhost:8080/realms/Gruas_UCAB_1/protocol/openid-connect/token", content);
+            var tokenEndpoint = $"{_config["Keycloak:BaseUrl"]}/realms/{_config["Keycloak:Realm"]}/protocol/openid-connect/token";
+            var response = await client.PostAsync(tokenEndpoint, content);
             if (!response.IsSuccessStatusCode)
             {
                 if (response.StatusCode==System.Net.HttpStatusCode.BadRequest)
@@ -69,7 +70,8 @@ namespace LogginMS.Service
              new KeyValuePair<string, string>("password", "admin"),
             });
 
-            var tokenResponse = await client.PostAsync("http://localhost:8080/realms/master/protocol/openid-connect/token", tokenContent);
+            var tokenEndpoint = $"{_config["Keycloak:BaseUrl"]}/realms/master/protocol/openid-connect/token";
+            var tokenResponse = await client.PostAsync(tokenEndpoint, tokenContent);
             if (!tokenResponse.IsSuccessStatusCode)
             {
                 throw new UnauthorizedAccessException("No se pudo obtener el token de acceso.");
@@ -80,7 +82,8 @@ namespace LogginMS.Service
 
             // Obtener el ID del usuario
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            var userResponse = await client.GetAsync($"http://localhost:8080/admin/realms/Gruas_UCAB_1/users?username={username}");
+            var userEndpoint = $"{_config["Keycloak:BaseUrl"]}/admin/realms/{_config["Keycloak:Realm"]}/users?username={username}";
+            var userResponse = await client.GetAsync(userEndpoint);
             if (!userResponse.IsSuccessStatusCode)
             {
                 var errorContent = await userResponse.Content.ReadAsStringAsync();
@@ -93,7 +96,8 @@ namespace LogginMS.Service
             // Usar el token de acceso para la solicitud de restablecimiento de contraseña
             var content = new StringContent("[\"UPDATE_PASSWORD\"]", Encoding.UTF8, "application/json");
 
-            var request = new HttpRequestMessage(HttpMethod.Put, $"http://localhost:8080/admin/realms/Gruas_UCAB_1/users/{userId}/execute-actions-email")
+            var requestEndpoint = $"{_config["Keycloak:BaseUrl"]}/admin/realms/{_config["Keycloak:Realm"]}/users/{userId}/execute-actions-email";
+            var request = new HttpRequestMessage(HttpMethod.Put, requestEndpoint)
             {
                 Content = content
             };

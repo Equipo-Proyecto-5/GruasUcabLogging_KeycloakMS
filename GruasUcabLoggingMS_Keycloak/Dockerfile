@@ -23,6 +23,7 @@ COPY --from=build /app/out .
 # Exponer los puertos para la aplicación
 EXPOSE 7133
 EXPOSE 5230
+EXPOSE 8080
 
 # Comando para ejecutar la aplicación
 ENTRYPOINT ["dotnet", "GruasUcabLoggingMS_Keycloak.dll"]

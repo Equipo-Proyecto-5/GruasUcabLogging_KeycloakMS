@@ -8,17 +8,22 @@ using MediatR;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//builder.WebHost.ConfigureKestrel(options =>
-//{
-  //  options.ListenAnyIP(5230); // Puerto HTTP
-   // options.ListenAnyIP(7133); // Puerto HTTPS
-//});
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(5230); // Puerto HTTP
+    options.ListenAnyIP(7133); // Puerto HTTPS
+});
 
 // Configuración de autenticación con JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = "http://keycloak/realms/Gruas_UCAB_1";
+        var keycloakBaseUrl = builder.Configuration["Keycloak:BaseUrl"];
+        var keycloakRealm = builder.Configuration["Keycloak:Realm"];
+        var keycloakClientId = builder.Configuration["Keycloak:ClientId"];
+
+
+        options.Authority = $"{keycloakBaseUrl}/realms/{keycloakRealm}";
         options.Audience = "client-public";
         options.RequireHttpsMetadata = false; // Cambia esto a 'true' en producción
 
@@ -75,11 +80,12 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowSpecificOrigin", policy =>
+    options.AddPolicy("AllowAllOrigins", policy =>
     {
-        policy.WithOrigins("http://localhost:5173") // Solo permite solicitudes desde este origen
+        policy.AllowAnyOrigin() // Permite solicitudes desde cualquier origen
               .AllowAnyMethod()
               .AllowAnyHeader();
     });

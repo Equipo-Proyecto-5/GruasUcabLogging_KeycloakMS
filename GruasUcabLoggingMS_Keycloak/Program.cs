@@ -14,6 +14,14 @@ builder.WebHost.ConfigureKestrel(options =>
     options.ListenAnyIP(7133); // Puerto HTTPS
 });
 
+
+// Configuración explícita de URLs
+builder.WebHost.UseUrls("http://+:5230", "https://+:7133");
+
+
+
+
+
 // Configuración de autenticación con JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

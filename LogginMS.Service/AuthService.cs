@@ -12,16 +12,15 @@ namespace LogginMS.Service
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _config;
-        private readonly HttpClient _httpClient;
 
         public AuthService(IHttpClientFactory httpClientFactory, IConfiguration config)
         {
             _httpClientFactory = httpClientFactory;
             _config = config;
-            _httpClient = _httpClientFactory.CreateClient();
+         
         }
 
-
+        //Login
         public async Task<string> AuthenticateAsync(string username, string password)
         {
             var client = _httpClientFactory.CreateClient();
@@ -30,10 +29,11 @@ namespace LogginMS.Service
                 new KeyValuePair<string, string>("client_id", "client-public"),
                 new KeyValuePair<string, string>("username", username),
                 new KeyValuePair<string, string>("password", password),
-                new KeyValuePair<string, string>("grant_type", "password"),
+                new KeyValuePair<string, string>("grant_type","password"),
             });
+            
 
-            var response = await client.PostAsync("http://localhost:8080/realms/Gruas_UCAB_1/protocol/openid-connect/token", content);
+            var response = await client.PostAsync($"{_config["Keycloak:BaseUrl"]}/realms/{_config["Keycloak:Realm"]}/protocol/openid-connect/token", content);
             if (!response.IsSuccessStatusCode)
             {
                 if (response.StatusCode==System.Net.HttpStatusCode.BadRequest)
@@ -50,34 +50,16 @@ namespace LogginMS.Service
             var responseContent = await response.Content.ReadAsStringAsync();
             var tokenResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
             return tokenResponse.GetProperty("access_token").GetString();
-            return await response.Content.ReadAsStringAsync();
         }
 
+        //Recuperacion de contraseña
         public async Task<string> RequestPasswordResetAsync(string username)
         {
             var client = _httpClientFactory.CreateClient();
-
-            // Obtener el token de acceso
-            var tokenContent = new FormUrlEncodedContent(new[]
-            {
-        new KeyValuePair<string, string>("client_id", "admin-cli"),
-        new KeyValuePair<string, string>("grant_type", "password"),
-        new KeyValuePair<string, string>("username", "admin"),
-        new KeyValuePair<string, string>("password", "admin"),
-    });
-
-            var tokenResponse = await client.PostAsync("http://localhost:8080/realms/master/protocol/openid-connect/token", tokenContent);
-            if (!tokenResponse.IsSuccessStatusCode)
-            {
-                throw new UnauthorizedAccessException("No se pudo obtener el token de acceso.");
-            }
-
-            var tokenResult = await tokenResponse.Content.ReadAsStringAsync();
-            var token = JsonDocument.Parse(tokenResult).RootElement.GetProperty("access_token").GetString();
-
+            var token = await GetAdminAccessTokenAsync();
             // Obtener el ID del usuario
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            var userResponse = await client.GetAsync($"http://localhost:8080/admin/realms/Gruas_UCAB_1/users?username={username}");
+            var userResponse = await client.GetAsync($"{_config["Keycloak:BaseUrl"]}/admin/realms/{_config["Keycloak:Realm"]}/users?username={username}");
             if (!userResponse.IsSuccessStatusCode)
             {
                 var errorContent = await userResponse.Content.ReadAsStringAsync();
@@ -90,7 +72,7 @@ namespace LogginMS.Service
             // Usar el token de acceso para la solicitud de restablecimiento de contraseña
             var content = new StringContent("[\"UPDATE_PASSWORD\"]", Encoding.UTF8, "application/json");
 
-            var request = new HttpRequestMessage(HttpMethod.Put, $"http://localhost:8080/admin/realms/Gruas_UCAB_1/users/{userId}/execute-actions-email")
+            var request = new HttpRequestMessage(HttpMethod.Put, $"{_config["Keycloak:BaseUrl"]}/admin/realms/{_config["Keycloak:Realm"]}/users/{userId}/execute-actions-email")
             {
                 Content = content
             };
@@ -106,6 +88,7 @@ namespace LogginMS.Service
 
             return await response.Content.ReadAsStringAsync();
         }
+        //Obtener el token de accesso del cliente secreto
         public async Task<string> GetAdminAccessTokenAsync()
         {
             var client = _httpClientFactory.CreateClient();
@@ -123,7 +106,7 @@ namespace LogginMS.Service
             var tokenResponse = JsonSerializer.Deserialize<JsonElement>(responseContent);
             return tokenResponse.GetProperty("access_token").GetString();
         }
-
+        //Obtener el id del usuario
         public async Task<Guid> GetUserByUserName(string userName)
         {
             var client = _httpClientFactory.CreateClient();
@@ -140,6 +123,7 @@ namespace LogginMS.Service
             return Guid.Parse(id);
 
         }
+        //Verificar si el usuarrio tiene pendiente un cambio de contraseña
         public async Task<bool> GetRequiredActionsByUser(string userName)
         {
             var client = _httpClientFactory.CreateClient();
@@ -163,6 +147,7 @@ namespace LogginMS.Service
             return false;
 
         }
+        //Cambio de contraseña
         public async Task UpdatePasswordAsync(  string password, string userName)
         {
             var id = await GetUserByUserName(userName);

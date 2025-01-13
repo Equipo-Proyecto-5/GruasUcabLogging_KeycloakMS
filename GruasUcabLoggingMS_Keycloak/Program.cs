@@ -8,11 +8,11 @@ using MediatR;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//builder.WebHost.ConfigureKestrel(options =>
-//{
-  //  options.ListenAnyIP(5230); // Puerto HTTP
-   // options.ListenAnyIP(7133); // Puerto HTTPS
-//});
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(5230); // Puerto HTTP
+    options.ListenAnyIP(7133); // Puerto HTTPS
+});
 
 // Configuración de autenticación con JWT
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
